@@ -1,0 +1,52 @@
+public static int help(int[][] p, int x, int y, int dic, int blocks, int findX, int findY, char[] instr, int filled) { 
+		if (x == findX && y == findY) {
+			while (filled < instr.length) {
+				instr[filled++] = 'e';
+			}
+			return 1;
+		}
+		if (filled == instr.length - 2) return 0;
+		if (x < findX) {
+			if (dic != 0) {
+				instr[filled++] = 'l';
+				return help(p, x, y, (dic + 1) % 4, blocks, findX, findY, instr, filled);
+			} //turn left till the right direction
+			else if (x < p.length && Math.abs(p[x + 1][y] - p[x][y]) <= 1) {
+				instr[filled++] = 's';
+				return help(p, x + 1, y, dic, blocks, findX, findY, instr, filled);
+			} // check for the height difference, oke then move
+			else if (x < p.length && p[x + 1][y] - 1 > p[x][y]) {
+				instr[filled++] = 'n';
+				p[x + 1][y] --;
+				return help(p, x, y, dic, blocks + 1, findX, findY, instr, filled);
+			} //if the next one is at least 2 blocks higher 
+			else if (x < p.length && (p[x + 1][y] < p[x][y] - 1) && (blocks > 0)) {
+				instr[filled++] = 'p';
+				p[x + 1][y] ++;
+				return help(p, x, y, dic, blocks - 1, findX, findY, instr, filled);
+			} // if the next one is at least 2 blocks lower and we still have blocks to place
+			else return 0;
+		}
+		if (y < findY) {
+			if (dic != 1) {
+				instr[filled++] = 'l';
+				return help(p, x, y, (dic + 1) % 4, blocks, findX, findY, instr, filled);
+			}
+			else if (y < p[x].length && Math.abs(p[x][y + 1] - p[x][y]) <= 1) {
+				instr[filled++] = 's';
+				return help(p, x + 1, y, dic, blocks, findX, findY, instr, filled);
+			}
+			else if (y < p[x].length && p[x][y + 1] - 1 > p[x][y]) {
+				instr[filled++] = 'n';
+				p[x][y + 1]--;
+				return help(p, x, y, dic, blocks + 1, findX, findY, instr, filled);
+			}
+			else if (y < p[x].length && (p[x][y + 1] < p[x][y] - 1) && (blocks > 0)) {
+				instr[filled++] = 'p';
+				p[x][y + 1]++;
+				return help(p, x, y, dic, blocks - 1, findX, findY, instr, filled);
+			}
+			else return 0;
+		}
+		return 0;
+	}
