@@ -1,0 +1,52 @@
+package pgdp.crypto;
+
+import static pgdp.MiniJava.*;
+
+
+
+
+
+public class CaesarChiffre {
+	static char[] toArray(String input) {
+		char result[] = new char[input.length()];
+		for (int i = 0; i < input.length(); i++) {
+			result[i] = input.charAt(i);
+		}
+		return result;
+	}
+	
+	static String encrypt(char[] input, int key) {
+		String s = "";
+		for (int i = 0; i < input.length; i++) {
+			if (input[i] >= 'a' && input[i] <= 'z') {
+				input[i] += key;
+				if (input[i] > 'z') input[i] -= 26;
+			}
+			if (input[i] >= 'A' && input[i] <= 'Z') {
+				input[i] += key;
+				if (input[i] > 'Z') input[i] -= 26;
+			}
+			s += input[i];
+		}
+		return s;
+	}
+	
+	
+	
+    public static void main(String[] args) {
+        String inputText = readString("Bitte Text eingeben:");
+        int key = readInt("Bitte Schlüssel eingeben:");
+        
+        char ans[] = toArray(inputText);
+        
+        while (key < 0 || key > 26) {
+        	key %= 26;
+        	if (key < 0) key += 26;
+        }
+        
+        String s = encrypt(ans,key);
+        write(s);
+        // TODO output
+    }
+}
+ 
