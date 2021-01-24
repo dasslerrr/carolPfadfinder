@@ -1,0 +1,87 @@
+package pgdp.corona;
+
+import java.time.LocalDate;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import pgdp.corona.CaseReport.Type;
+
+
+public class PandemicAnalysis {
+
+	public static int totalCases(Stream<Entry> entryStream, CaseReport.Getter getter) {
+		return entryStream.map(entry -> getter.get(entry).count).reduce(0, (a, b) -> a + b);
+	}
+	
+	public static int newCases(Stream<Entry> entryStream, CaseReport.Getter getter) {
+		return entryStream.map(entry -> {
+			Type type = getter.get(entry).type;
+			int amount = getter.get(entry).count;
+			if (type == Type.NEW || type == Type.CORRECTION) return amount;
+			return 0;
+		}).reduce(0, (a, b) -> a + b);
+	}
+	
+	public static int activeInfections(Stream<Entry> entryStream) {
+		return entryStream.map(activeSum).reduce(0, (a, b) -> a + b);
+	}
+	
+	private static Function<Entry, Integer> activeSum = (e) -> {
+		int sum = 0;
+		if (e.getInfection().type != Type.CORRECTION) sum += e.getInfection().count;
+		if (e.getDeath().type != Type.CORRECTION) sum -= e.getDeath().count;
+		if (e.getRecovery().type != Type.CORRECTION) sum -= e.getRecovery().count;
+		return sum;
+	};
+	
+	public static List<String> safestStates(Stream<Entry> entryStream){
+		
+		Map<String, Integer> sortedMap = sortByValue(entryStream.collect(Collectors.toMap(entry -> entry.getState(), activeSum, (a, b) -> a + b)));
+//		entryStream.collect(Collectors.toMap(entry -> entry.getState(), activeSum, (a, b) -> a + b))
+		return sortedMap.keySet().stream().collect(Collectors.toList());
+	}
+	
+	
+	private static Map<String, Integer> sortByValue(Map<String, Integer> unsortMap) {
+
+        
+        List<Map.Entry<String, Integer>> list =
+                new LinkedList<Map.Entry<String, Integer>>(unsortMap.entrySet());
+
+        
+        Collections.sort(list, new Comparator<Map.Entry<String, Integer>>() {
+            public int compare(Map.Entry<String, Integer> o1,
+                               Map.Entry<String, Integer> o2) {
+                return (o1.getValue()).compareTo(o2.getValue());
+            }
+        });
+        
+        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
+        for (Map.Entry<String, Integer> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+
+        return sortedMap;
+    }
+	
+//	public static LocalDate firstDate(Stream<Entry> entryStream) {
+//		
+//	}
+	
+    public static void main(String[] args) {
+//        String filename = "RKI_COVID19_example.csv";
+        String filename = "RKI_COVID19_Darmstadt_Koblenz.csv";
+        Dataset dataset = new Dataset("dataset/" + filename);
+        
+        dataset.stream().forEach(System.out::println);
+        
+        System.out.println(totalCases(dataset.stream(), Entry::getInfection));
+        System.out.println(activeInfections(dataset.stream().filter(e -> e.getState().equals("Hessen"))));
+        System.out.println(activeInfections(dataset.stream().filter(e -> e.getState().equals("Rheinland-Pfalz"))));
+        System.out.println(safestStates(dataset.stream()));
+    }
+}
